@@ -1,0 +1,225 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdarg.h>
+#include<string.h>
+#include<ctype.h>
+#include<math.h>
+#define MAXSIZE  100  
+#define  IS  1  
+#define  Not  0  
+#define Failed  0  
+#define  success  1
+#define Empty  -1
+
+// "*"
+int
+mult(double a, double b)
+{
+   return  a*b;
+}
+// "/"
+int
+div_(int a, int b)
+{
+   // return  a* pow(b, -1);
+   return  a/b;
+}
+// "+"
+int
+plus(int a, int b)
+{
+   return  a + b;
+}
+// "+"
+int
+minus(int a, int b)
+{
+   return  a - b;
+}
+//匹配字符， 进行相应运算
+int
+mate(char ch, int a, int b)
+{
+   //这里也可以用Switch表达式
+   if(ch == '*')  return  mult(a, b);
+   if(ch == '/')   return  div_(a, b);
+   if(ch == '+')  return  plus(a, b);
+   if(ch == '-')  return  minus(a, b);
+}
+
+typedef struct Stack//栈结构体
+{
+   int Top;//计数
+   int data[MAXSIZE];//存数字的数组， int型, 因为要用ASCII编码
+}Stack;
+
+int
+Isempty(Stack *S)//判断栈是否空
+{
+   if(S->Top == Empty)
+      return  IS;
+   return  Not;
+}
+
+int//初始化栈
+Initi_Stack(Stack **S)
+{
+   (*S)->Top = -1;
+   return  success;
+}
+
+int
+Isfull(Stack *S)//判断栈是否满
+{
+   if(S->Top == MAXSIZE-1)
+      return  IS;
+   return  Not;
+}
+
+int
+Push(Stack **S, double num) 
+{
+   if(Isfull((*S)))//判断是否已满
+      return  Failed;//满了则返回push失败
+   (*S)->data[++(*S)->Top] = num;//没满则push
+   return  success;
+}
+
+int
+Pop(Stack **S)
+{
+   if(Isempty((*S)))//判断栈是否空
+      return  Failed;//如果kon了则返回失败
+   return  (*S)->data[(*S)->Top--];//返回成功
+}
+
+int
+Isopreator(char ch)//判断是否是运算符号
+{
+   if(ch == '+' || ch == '-' || ch == '*' || ch == '/')
+      return  IS;
+   return  Not;
+}
+
+int EvaluatePostfixExpression(const char *Expression)//利用后缀表达式计算
+{
+   Stack *S = malloc(sizeof(Stack));//声明一个栈
+   Initi_Stack(&S);//初始化栈
+
+   for(int i=0 ; Expression[i] != '\0' ; i++) {//从第一个字符开始判断， 直到空字符('\0'不判断)为止
+      if(isdigit(Expression[i])) {
+         Push(&S, Expression[i] - '0');//利用ASCII编码将字符型数字转换成int型数字
+      }
+      else if(Isopreator(Expression[i])) {
+         int oprand1 = Pop(&S);//声明两个int型变量， 获取栈中用于计算的量
+         int oprand2 = Pop(&S);
+
+         switch(Expression[i]) {//Switch表达式用于不同的opreator计算
+            case '*': 
+               Push(&S, mate(Expression[i], oprand1, oprand2)); break;
+            case '/':
+               Push(&S, mate(Expression[i], oprand1, oprand2)); break;
+            case '+':
+               Push(&S, mate(Expression[i], oprand1, oprand2)); break;
+            case '-':
+               Push(&S, mate(Expression[i], oprand1, oprand2)); break;
+         }
+      }
+   }
+   return Pop(&S);
+}
+
+int
+getOperatorPrecedence(char op) //判断符号优先级， 也可以用if语句做到
+{
+   switch(op) {
+      case '+':
+      case '-':
+         return  1;
+         
+      case '*':
+      case '/':
+         return  2;
+
+      default:
+         return  0;
+   }
+}
+
+char *
+infixToPostfix(const char *infixExpression, char *postfixExpression) 
+{
+   Stack *operatorStack = malloc(sizeof(Stack));
+   Initi_Stack(&operatorStack);
+
+   int j=0;
+
+   for(int i = 0 ; infixExpression[i] != '\0' ; i++) {
+      char currentChar = infixExpression[i]; 
+
+      if(isdigit(currentChar)) {
+         postfixExpression[j++] = currentChar;
+         printf("postfixexpression = %s\n", postfixExpression);
+      }
+      else if(Isopreator(currentChar)) {
+         while(operatorStack->Top >= 0 && 
+               getOperatorPrecedence(operatorStack->data[operatorStack->Top]) >= getOperatorPrecedence(currentChar) ) {
+                  postfixExpression[j++] = Pop(&operatorStack);
+                  printf("postfixexpression = %s\n", postfixExpression);
+         }
+         Push(&operatorStack, currentChar);
+      }
+      else if(currentChar == '(') {
+         Push(&operatorStack, currentChar);
+      }
+      else if(currentChar == ')') {
+         while(operatorStack->Top >= 0 && operatorStack->data[operatorStack->Top] != '(') {
+            postfixExpression[j++] = Pop(&operatorStack);
+            printf("postfixexpression = %s\n", postfixExpression);
+         }
+         Pop(&operatorStack);
+      }
+   }
+
+      while(operatorStack->Top >= 0) {
+         postfixExpression[j++] = Pop(&operatorStack);
+         printf("postfixexpression = %s\n", postfixExpression);
+      }
+
+      postfixExpression[j] = '\0';
+      
+   
+   return  postfixExpression;
+}
+
+int
+main(void)
+{
+   // double a = 1.0;
+   // double b = 5.0;
+   // printf("%f * %f = %f\n", a, b, mate('*', a, b));
+   // printf("%f / %f = %f\n", a, b, mate('/', a, b));
+   // printf("%f + %f = %f\n", a, b, mate('+', a, b));
+   // printf("%f - %f = %f\n", a, b, mate('-', a, b));
+
+   //  const char *postfixExpression = "34+2*";//声明前缀表达式
+   //  int result = EvaluatePostfixExpression(postfixExpression);//记录计算结果
+   //  printf("Result of postfix expression '%s' is: %d\n", postfixExpression, result);
+   // char infixexpression[100];
+   // printf("输入中缀表达式："); fgets(infixexpression, 100, stdin);
+   // printf("你输入的是%s\n", infixexpression);   
+   char *infixexpression = "2*2+2/2";
+   char postfixexpression[100];
+   char *postfixexpression2;
+
+   postfixexpression2 = infixToPostfix(infixexpression, postfixexpression);
+   
+   printf("postficexpression2 = %s\n", postfixexpression2);
+   
+   int result = EvaluatePostfixExpression(postfixexpression2);
+   
+   printf("%s = %d", infixexpression, result);
+    return 0;
+}
+
+//用来写除法还是有问题， 加减乘没问题
