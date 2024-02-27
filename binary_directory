@@ -1,0 +1,59 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdarg.h>
+#include<string.h>
+#include<ctype.h>
+#include<math.h>
+#define MAXSIZE  10
+//!!!
+//注意！， 此项目只用是简化版的目录代码， 只用到了二叉树
+//用到了strcmp， strcpy两个函数
+
+typedef struct Bi_Tree_Node //创建二叉树结构体
+{
+	char Dir_Name[100];//节点值为一串字符串
+	struct Bi_Tree_Node *LeftNode;
+	struct Bi_Tree_Node *RightNode;
+}Bi_Tree_Node;
+
+void
+Creat_BiTree(Bi_Tree_Node **Tree) 
+{
+	char Dir_Name[100];
+	printf("enter the value of the tree node:  ");
+	scanf("%s", Dir_Name);//输入字符串
+
+	if(strcmp("NONE", Dir_Name) == 0 ) {//比较字符串是否相等
+		*Tree = NULL;
+	}
+	else {
+		(*Tree) = (Bi_Tree_Node *)malloc(sizeof(Bi_Tree_Node));
+		if(!(*Tree)) {//判断是否malloc
+			printf("malloc failed!!!\n");
+			return;
+		}
+		// (*Tree)->Dir_Name = Dir_Name; !!!!!!字符串不能直接赋值
+		strcpy( (*Tree)->Dir_Name, Dir_Name);//复制字符串strcpy
+		Creat_BiTree(&(*Tree)->LeftNode);
+		Creat_BiTree(&(*Tree)->RightNode);
+	}
+}
+
+void
+InorderTraverse(Bi_Tree_Node *Tree)
+{
+	if(Tree == NULL)
+		return;
+	InorderTraverse(Tree->LeftNode);
+	printf("%s\n", Tree->Dir_Name);
+	InorderTraverse(Tree->RightNode);
+}
+
+int
+main(void)
+{
+	Bi_Tree_Node *root;
+	Creat_BiTree(&root);
+	InorderTraverse(root);
+	return  0;
+}
