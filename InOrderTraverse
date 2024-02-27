@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include<string.h>
+#include <windows.h>
+
+//定义线索enum变量
+typedef enum Flag{
+	Link,
+	Thread,
+}Flag;
+
+//二叉线索树结构体
+typedef struct TreeNode
+{
+	int val;
+	struct TreeNode *LeftNode;
+	Flag Leftflag;
+	struct TreeNode *RightNode;
+	Flag Rightflag;
+}TreeNode;
+
+//创建二叉线索树
+int
+Creat_Thread_Bi_Tree(TreeNode **Node)
+{
+	int val;//节点值
+
+	printf("输入节点的值: "); scanf("%d", &val);
+
+	//用来判断2节点是否是NULL;
+	if(val == -1) {
+		*Node = NULL;
+	}
+	else {
+		//为节点分配内存
+		(*Node) = (TreeNode *)malloc(sizeof(TreeNode));
+		
+		//如果分配失败
+		if((*Node) == NULL) {
+			printf("内存分配失败！！！");
+			exit(EXIT_FAILURE);
+		}
+
+		//分配成功，对节点做一些操作初始化
+		(*Node)->val = val;
+		(*Node)->LeftNode  = NULL;
+		(*Node)->Leftflag  = Link;
+		(*Node)->RightNode = NULL;
+		(*Node)->Rightflag = Link;
+
+		//左右节点
+		Creat_Thread_Bi_Tree( &(*Node)->LeftNode  );
+		Creat_Thread_Bi_Tree( &(*Node)->RightNode );
+	}
+
+}
+
+//中序搭建线索
+void
+Creat_Inorder_Thread(TreeNode **root, TreeNode **pre)
+{
+	if((*root) != NULL) {
+
+		//从中序遍历第一个节点开始
+		Creat_Inorder_Thread( &(*root)->LeftNode, pre);
+
+		//如果节点左子节点为NULL;
+		if((*root)->LeftNode == NULL) {
+			(*root)->LeftNode =   *pre;
+			(*root)->Leftflag = Thread;
+		}
+
+		//如果前驱节点的有子节点为NULL，且pre不为NULL;
+		if(*pre != NULL && (*pre)->RightNode == NULL) {
+			(*pre)->RightNode = (*root);
+			(*pre)->Rightflag =  Thread;
+		}
+
+		//更新pre
+		*pre = *root;
+
+		//线索化右节点
+		Creat_Inorder_Thread( &(*root)->RightNode, pre);
+	}
+}
+
+void
+InOrderTraverse(TreeNode *root)
+{
+	TreeNode *current = root;//表示当前节点
+
+	//找到第一个开始遍历的节点
+	while(current != NULL && current->Leftflag == Link) {
+		current = current->LeftNode;
+	}
+
+	//开始遍历
+	while(current != NULL) {
+		printf("%d", current->val);//打印
+
+		//如果右节点接的是后继则直接到后继
+		if(current->Rightflag == Thread) {
+			current = current->RightNode;
+		}
+		//如果不是， 则把右节点当做根节点开始遍历
+		else {
+			current = current->RightNode;
+			while(current != NULL && current->Leftflag == Link);
+		}
+	}
+
+}
+
+int
+main(void)
+{
+	TreeNode *root;
+	Creat_Thread_Bi_Tree(&root);
+	TreeNode *pre = NULL;
+	Creat_Inorder_Thread(&root, &pre);
+	InOrderTraverse(root);
+}
+
